@@ -10,6 +10,8 @@ from rest_framework.mixins import ListModelMixin, CreateModelMixin
 
 # Create your views here.
 
+# VIEWS WITHOUT MIXINS
+
 class ProductList(APIView):
         def get(self, request):
             query_set = Product.objects.select_related('collection').all()

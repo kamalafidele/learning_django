@@ -7,11 +7,8 @@ class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         fields = ['id', 'title', 'products_count']
-    products_count = serializers.SerializerMethodField(method_name='calculate_products')
+    products_count = serializers.IntegerField(read_only=True)
 
-    def calculate_products(self, collection: Collection):
-        num = Product.objects.filter(collection=collection.id).count()
-        return num
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:

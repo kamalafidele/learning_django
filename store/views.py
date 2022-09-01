@@ -8,6 +8,7 @@ from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIV
 
 
 # Create your views here.
+# USING GENERIC VIEWS
 
 class ProductList(ListCreateAPIView):
         queryset = Product.objects.select_related('collection').all()

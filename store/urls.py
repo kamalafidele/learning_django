@@ -1,4 +1,3 @@
-from email.mime import base
 from django.urls import path
 from . import views
 from rest_framework.routers import DefaultRouter
@@ -13,7 +12,7 @@ router.register('collections', views.CollectionViewSet)
 
 
 product_router = routers.NestedDefaultRouter(router, 'products', lookup='product')
-product_router.register('reviews', views.ReviewViewSet, basename='product-reveiews')
+product_router.register('reviews', views.ReviewViewSet, basename='product-reviews')
 
 urlpatterns = [
    path('', include(router.urls)),

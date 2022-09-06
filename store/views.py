@@ -3,20 +3,27 @@ from django.db.models import Count
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from store.filters import ProductFilter
-from .models import Collection, OrderItem, Product, Review
-from .serializers import ProductSerializer, CollectionSerializer, ReviewSerializer
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.pagination import PageNumberPagination
 # from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
+from .filters import ProductFilter
+from .models import Cart, Collection, OrderItem, Product, Review
+from .serializers import CartSerializer, ProductSerializer, CollectionSerializer, ReviewSerializer
 
 class ProductViewSet(ModelViewSet):
         queryset = Product.objects.all()
         serializer_class = ProductSerializer
 
         # GENERIC FILTERING
-        filter_backends = [DjangoFilterBackend]
+        filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
         # filterset_fields = ['collection_id']
         filterset_class = ProductFilter
+        pagination_class = PageNumberPagination
+
+        search_fields = ['title', 'description']
+        ordering_fields = ['unit_price', 'last_update']
 
         # HERE I CUSTOMIZED THE DESTROY METHOD SO THAT I CAN ADD MY EXTRA LOGIC
         def destroy(self, request, *args, **kwargs):
@@ -33,6 +40,9 @@ class ProductViewSet(ModelViewSet):
 class CollectionViewSet(ModelViewSet):
         queryset = Collection.objects.annotate(products_count=Count('products')).all()
         serializer_class = CollectionSerializer
+        pagination_class = PageNumberPagination
+        filter_backends = [SearchFilter]
+        search_fields = ['title']
 
         def destroy(self, request, *args, **kwargs):
                 if Collection.objects.filter(pk=kwargs['pk']).get().products.count() > 0:
@@ -50,4 +60,8 @@ class ReviewViewSet(ModelViewSet):
         def get_serializer_context(self):
                 return { 'product_id': self.kwargs['product_pk'] }
 
-        
+
+class CartViewSet(CreateModelMixin, RetrieveModelMixin, GenericViewSet):
+        # queryset = Cart.objects.prefetch_related('items__product').all()
+        queryset = Cart.objects.all()
+        serializer_class = CartSerializer

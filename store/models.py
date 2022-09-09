@@ -1,5 +1,6 @@
 from django.db import models
 from uuid import uuid4
+from django.conf import settings
 
 class Promotion(models.Model):
     description = models.CharField(max_length=255)
@@ -32,12 +33,13 @@ class Customer(models.Model):
         ('G', 'Gold')
     ]
 
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15)
     birth_date = models.DateField(null=True)
     membership = models.CharField(max_length=1,choices=MEMBERSHIP_CHOICES,default='B')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['user__first_name', 'user__last_name']
 
 
 class Order(models.Model):

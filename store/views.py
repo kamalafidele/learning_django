@@ -8,6 +8,9 @@ from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, DestroyM
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, AllowAny
+
+from store.permissions import IsAdminOrReadOnly
 # from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from .filters import ProductFilter
 from .models import Cart, CartItem, Collection, Customer, OrderItem, Product, Review
@@ -16,6 +19,8 @@ from .serializers import AddCartItemSeriliazer, CartSerializer, CustomerSerializ
 class ProductViewSet(ModelViewSet):
         queryset = Product.objects.all()
         serializer_class = ProductSerializer
+        
+        permission_classes = [IsAdminOrReadOnly]
 
         # GENERIC FILTERING
         filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -39,6 +44,7 @@ class ProductViewSet(ModelViewSet):
 
 
 class CollectionViewSet(ModelViewSet):
+        permission_classes = [IsAuthenticated]
         queryset = Collection.objects.annotate(products_count=Count('products')).all()
         serializer_class = CollectionSerializer
         pagination_class = PageNumberPagination
@@ -66,6 +72,7 @@ class CartViewSet(CreateModelMixin, RetrieveModelMixin, DestroyModelMixin, Gener
         # queryset = Cart.objects.prefetch_related('items__product').all()
         queryset = Cart.objects.all()
         serializer_class = CartSerializer
+        permission_classes = [IsAuthenticated]
 
 class CartItemViewSet(ModelViewSet):
         queryset =  CartItem.objects.all()
@@ -89,6 +96,14 @@ class CartItemViewSet(ModelViewSet):
 class CustomerViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
         queryset = Customer.objects.all()
         serializer_class = CustomerSerializer
+        permission_classes = [IsAuthenticated]
+
+        # SETTING PERMISSIONS FOR ONLY CERTAIN ENDPOINTS
+        def get_permissions(self):
+                if self.request.method == 'GET':
+                        return [AllowAny()]
+                return [IsAuthenticated()]
+
 
         @action(detail=False, methods=['GET', 'PUT'])
         def me(self, request):

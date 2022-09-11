@@ -13,8 +13,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from store.permissions import IsAdminOrReadOnly
 # from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from .filters import ProductFilter
-from .models import Cart, CartItem, Collection, Customer, OrderItem, Product, Review
-from .serializers import AddCartItemSeriliazer, CartSerializer, CustomerSerializer, ProductSerializer, CollectionSerializer, ReviewSerializer, CartItemSerializer, UpdateCartItemSerializer
+from .models import Cart, CartItem, Collection, Customer, Order, OrderItem, Product, Review
+from .serializers import AddCartItemSeriliazer, CartSerializer, CustomerSerializer, OrderSerializer, ProductSerializer, CollectionSerializer, ReviewSerializer, CartItemSerializer, UpdateCartItemSerializer
 
 class ProductViewSet(ModelViewSet):
         queryset = Product.objects.all()
@@ -116,4 +116,13 @@ class CustomerViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Ge
                         serializer.is_valid(raise_exception=True)
                         serializer.save()
                         return Response(serializer.data)
+
+class OrderViewSet(ModelViewSet):
+        queryset = Order.objects.all()
+        serializer_class = OrderSerializer
+        filter_backends = [ DjangoFilterBackend ,SearchFilter, OrderingFilter]
+        filterset_fields = ['customer_id']
+        ordering_fields = ['placed_at']
+        permission_classes = [IsAuthenticated]
+
                         

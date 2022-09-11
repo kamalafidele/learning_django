@@ -1,3 +1,4 @@
+from urllib import request
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 from rest_framework.response import Response
@@ -8,7 +9,7 @@ from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, DestroyM
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 
 from store.permissions import IsAdminOrReadOnly
 # from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
@@ -107,7 +108,7 @@ class CustomerViewSet(CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, Ge
 
         @action(detail=False, methods=['GET', 'PUT'])
         def me(self, request):
-                (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)
+                customer = Customer.objects.get(user_id=request.user.id)
                 if request.method == 'GET': 
                         serializer = CustomerSerializer(customer)
                         return Response(serializer.data)
@@ -122,13 +123,17 @@ class OrderViewSet(ModelViewSet):
         filter_backends = [ DjangoFilterBackend ,SearchFilter, OrderingFilter]
         filterset_fields = ['customer']
         ordering_fields = ['placed_at']
-        permission_classes = [IsAuthenticated]
+
+        def get_permissions(self):
+                if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+                        return [IsAdminUser()]
+                return [IsAuthenticated()]
 
         def get_queryset(self):
                 user = self.request.user
                 if user.is_staff:
                         return Order.objects.all()
-                (customer_id, created) = Customer.objects.only('id').get_or_create(user_id=user.id)
+                customer_id = Customer.objects.only('id').get(user_id=user.id)
                 return Order.objects.filter(customer_id=customer_id).all()
                 
                         
